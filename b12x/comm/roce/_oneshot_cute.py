@@ -36,6 +36,7 @@ import cuda.bindings.driver as cuda
 import cutlass
 import cutlass.cute as cute
 from cutlass import Int32, Int64, Uint32
+import torch
 
 from b12x._lib.compiler import KernelCompileSpec
 from b12x._lib.compiler import compile as b12x_compile
@@ -64,6 +65,11 @@ from ._cute_intrinsics import (
 
 PACK_BYTES = 16
 _DTYPE_PACK_ELEMS = {"float32": 4, "float16": 8, "bfloat16": 8}
+_DTYPE_NAMES = {
+    torch.float16: "float16",
+    torch.bfloat16: "bfloat16",
+    torch.float32: "float32",
+}
 _PREPARED_LAUNCHERS: set[tuple[object, ...]] = set()
 
 
@@ -349,7 +355,7 @@ def is_launcher_prepared(*key) -> bool:
 
 @functools.cache
 def get_launcher(
-    dtype_name: str,
+    dtype_name: str | torch.dtype,
     world_size: int,
     rank: int,
     threads: int,
@@ -359,6 +365,8 @@ def get_launcher(
     device_index: int,
 ) -> Callable[..., None]:
     """Compile the launcher for ``key`` once and return it."""
+    if isinstance(dtype_name, torch.dtype):
+        dtype_name = _DTYPE_NAMES[dtype_name]
     process_key = _process_key(
         dtype_name,
         world_size,
