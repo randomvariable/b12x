@@ -30,6 +30,7 @@ from cutlass import Int32, Int64, Uint32
 
 from b12x._lib.compiler import KernelCompileSpec
 from b12x._lib.compiler import compile as b12x_compile
+from b12x._lib.compile_plan import attach_programs
 from b12x._lib.runtime_control import raise_if_kernel_resolution_frozen
 from b12x._lib.utils import current_cuda_stream, make_ptr
 
@@ -379,7 +380,7 @@ def get_launcher(
         )
 
     _PREPARED_LAUNCHERS.add(process_key)
-    return run
+    return attach_programs(run, raw)
 
 
 __all__ = ["PACK_BYTES", "get_launcher", "is_launcher_prepared"]
